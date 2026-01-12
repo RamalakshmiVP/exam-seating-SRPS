@@ -1,0 +1,35 @@
+const students = [
+  { id: 1, student_name: "Arun", register_no: "1001", dept: "CSE", sem: "4" },
+  { id: 2, student_name: "Bala", register_no: "1002", dept: "CSE", sem: "4" },
+  { id: 3, student_name: "Chitra", register_no: "1003", dept: "ECE", sem: "4" },
+  { id: 4, student_name: "Divya", register_no: "1004", dept: "ECE", sem: "4" },
+  { id: 5, student_name: "Eshan", register_no: "1005", dept: "MECH", sem: "4" },
+  { id: 6, student_name: "Fathima", register_no: "1006", dept: "MECH", sem: "4" },
+  { id: 7, student_name: "Gokul", register_no: "1007", dept: "CIVIL", sem: "4" },
+  { id: 8, student_name: "Hema", register_no: "1008", dept: "CIVIL", sem: "4" },
+    { id: 9, student_name: "Irfan", register_no: "1009", dept: "CSE", sem: "4" },
+    { id: 10, student_name: "Jaya", register_no: "1010", dept: "ECE", sem: "4" },
+    { id: 11, student_name: "Kiran", register_no: "1011", dept: "MECH", sem: "4" },
+    { id: 12, student_name: "Latha", register_no: "1012", dept: "CIVIL", sem: "4" }, 
+    { id: 13, student_name: "Mani", register_no: "1013", dept: "CSE", sem: "4" },
+    { id: 14, student_name: "Nila", register_no: "1014", dept: "ECE", sem: "4" },
+    { id: 15, student_name: "Omar", register_no: "1015", dept: "MECH", sem: "4" },
+    { id: 16, student_name: "Pooja", register_no: "1016", dept: "CIVIL", sem: "4" }, 
+    { id: 17, student_name: "Ravi", register_no: "1017", dept: "CSE", sem: "4" },
+    { id: 18, student_name: "Sana", register_no: "1018", dept: "ECE", sem: "4" },
+    { id: 19, student_name: "Tariq", register_no: "1019", dept: "MECH", sem: "4" },
+    { id: 20, student_name: "Usha", register_no: "1020", dept: "CIVIL", sem: "4" } ,  
+    { id: 21, student_name: "Vikram", register_no: "1021", dept: "CSE", sem: "4" },
+    { id: 22, student_name: "Wafa", register_no: "1022", dept: "ECE", sem: "4" },
+    { id: 23, student_name: "Xavier", register_no: "1023", dept: "MECH", sem: "4" },
+    { id: 24, student_name: "Yamini", register_no: "1024", dept: "CIVIL", sem: "4" }, 
+    { id: 25, student_name: "Zain", register_no: "1025", dept: "CSE", sem: "4" },
+    { id: 26, student_name: "Aisha", register_no: "1026", dept: "ECE", sem: "4" },
+    { id: 27, student_name: "Bharat", register_no: "1027", dept: "MECH", sem: "4" },
+    { id: 28, student_name: "Charu", register_no: "1028", dept: "CIVIL", sem: "4" },  
+    { id: 29, student_name: "Dinesh", register_no: "1029", dept: "CSE", sem: "4" },
+    { id: 30, student_name: "Esha", register_no: "1030", dept: "ECE", sem: "4" }
+    
+];
+
+export default students;
