@@ -10,7 +10,8 @@ export default function AdminSidebar() {
     { label: "Students", path: "/admin/students" },
     { label: "Staff", path: "/admin/staff" },
     { label: "Rooms", path: "/admin/rooms" },
-    { label: "Seating", path: "/admin/seating" },
+    { label: "Timetable", path: "/admin/timetable" },
+    { label: "Seating", path: "/admin/seating" }
   ];
 
   return (

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from data.admin import admin
 from data.Staff import staff_list
-from data.Student import students
+# from data.Student import students
 
 users = Blueprint("users", __name__, url_prefix="/api")
 
@@ -69,19 +69,19 @@ def change_staff_password():
 
 
 # ================= STUDENT LOGIN =================
-@users.route("/login/student", methods=["POST"])
-def student_login():
-    data = request.json
+# @users.route("/login/student", methods=["POST"])
+# def student_login():
+#     data = request.json
 
-    for s in students:
-        if (
-            s["register_no"] == data.get("reg_no")
-            and s["dob"] == data.get("dob")
-        ):
-            return jsonify({
-                "status": "success",
-                "role": "student",
-                "name": s["student_name"]
-            })
+#     for s in students:
+#         if (
+#             s["register_no"] == data.get("reg_no")
+#             and s["dob"] == data.get("dob")
+#         ):
+#             return jsonify({
+#                 "status": "success",
+#                 "role": "student",
+#                 "name": s["student_name"]
+#             })
 
-    return jsonify({"status": "fail", "message": "Invalid credentials"}), 401
+#     return jsonify({"status": "fail", "message": "Invalid credentials"}), 401

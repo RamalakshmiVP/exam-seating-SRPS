@@ -6,6 +6,7 @@ from modules.seating import seating
 from modules.staff import staff
 from modules.students import students_bp
 from modules.classroom import rooms_bp
+from modules.timetable import timetable_bp
 
 app = Flask(__name__)
 CORS(app)
@@ -14,7 +15,9 @@ app.register_blueprint(users)
 app.register_blueprint(seating)
 app.register_blueprint(staff)
 app.register_blueprint(students_bp)
-app.register_blueprint(rooms_bp) 
+app.register_blueprint(rooms_bp)
+app.register_blueprint(timetable_bp)
+
 @app.route("/")
 def home():
     return {"status": "Backend Running"}

@@ -1,628 +1,780 @@
-// import { useState } from "react";
-// import {
-//   Box, Typography, Button,
-//   Table, TableHead, TableRow,
-//   TableCell, TableBody, Paper,
-//   FormControl, InputLabel, Select, MenuItem
-// } from "@mui/material";
 
-// import jsPDF from "jspdf";
-// import autoTable from "jspdf-autotable";
-
-// import studentsData from "../data/students";
-// import roomsData from "../data/rooms";
-// import staffData from "../data/staff";
-
-// import Header from "../components/header";
-// import AdminSidebar from "../components/sidebar";
-// import ClassroomDialog from "../components/ClassroomDialog";
-// import{Snackbar,Alert} from "@mui/material";
-
-// const arranged = generateMixedSeating(filtered, capacity);
-
-// const unallocated = filtered.slice(arranged.length);
-
-// setSeating(arranged);
-// setOverflow(unallocated);
-
-// if (unallocated.length > 0) {
-//   setNotify(true);
-// }
-
-// /* ================= MIXED SEATING ================= */
-// function generateMixedSeating(students, capacity) {
-//   const deptMap = {};
-//   students.forEach(s => {
-//     if (!deptMap[s.dept]) deptMap[s.dept] = [];
-//     deptMap[s.dept].push(s);
-//   });
-
-//   const depts = Object.keys(deptMap);
-//   const seated = [];
-
-//   while (seated.length < capacity) {
-//     for (let d of depts) {
-//       if (deptMap[d].length && seated.length < capacity) {
-//         seated.push(deptMap[d].shift());
-//       }
-//     }
-//     if (depts.every(d => deptMap[d].length === 0)) break;
-//   }
-
-//   const remaining = [];
-//   depts.forEach(d => {
-//     remaining.push(...deptMap[d]);
-//   });
-
-//   return { seated, remaining };
-// }
-
-
-// /* ================= AUTO ROOM ALLOCATION ================= */
-// function allocateStudentsToRooms(students, rooms) {
-//   const result = {}; // { A1: [], B2: [] }
-//   let remaining = [...students];
-
-//   rooms.forEach(room => {
-//     result[room.room_no] = [];
-//     for (let i = 0; i < room.capacity; i++) {
-//       if (remaining.length === 0) break;
-//       result[room.room_no].push(remaining.shift());
-//     }
-//   });
-
-//   return {
-//     roomWiseSeating: result,
-//     unallocatedStudents: remaining
-//   };
-// }
-
-// /* ================= DEPT SUMMARY ================= */
-// const getDeptSummary = (students) => {
-//   const map = {};
-//   students.forEach(s => {
-//     map[s.dept] = (map[s.dept] || 0) + 1;
-//   });
-//   return map;
-// };
-
-// export default function AdminSeating() {
-
-//   const [depts, setDepts] = useState([]);
-//   const [room, setRoom] = useState("");
-//   const [staff, setStaff] = useState("");
-//   const [seating, setSeating] = useState([]);
-//   const [overflow, setOverflow] = useState([]);
-//   const [openView, setOpenView] = useState(false);
-//   const [roomWise, setRoomWise] = useState({});
-//   const [currentRoom, setCurrentRoom] = useState("");
-
-//   const departments = [...new Set(studentsData.map(s => s.dept))];
-
-//   const capacity = room
-//     ? roomsData.find(r => r.room_no === room)?.capacity || 20
-//     : 20;
-
-//   /* ================= GENERATE ================= */
-//  const generateSeating = () => {
-//   if (depts.length === 0 || !staff) {
-//     alert("Select Department(s) & Invigilator");
-//     return;
-//   }
-
-//   // 1️⃣ Filter students
-//   const filtered = studentsData.filter(s => depts.includes(s.dept));
-
-//   // 2️⃣ Allocate students to rooms
-//   const { roomWiseSeating, unallocatedStudents } =
-//     allocateStudentsToRooms(filtered, roomsData);
-
-//   // 3️⃣ Set room-wise data
-//   setRoomWise(roomWiseSeating);
-
-//   // 4️⃣ Default first room view
-//   const firstRoom = Object.keys(roomWiseSeating)[0];
-//   setCurrentRoom(firstRoom);
-//   setSeating(roomWiseSeating[firstRoom] || []);
-
-//   // 5️⃣ AFTER GENERATION show warning
-//   if (unallocatedStudents.length > 0) {
-//     setTimeout(() => {
-//       alert(
-//         `⚠ Warning: ${unallocatedStudents.length} students not allocated due to room capacity`
-//       );
-//     }, 300);
-//   }
-// };
-
-
-//   /* ================= EXPORT PDF ================= */
-//   const exportPDF = () => {
-//     const doc = new jsPDF();
-//     const overflowSummary = getDeptSummary(overflow);
-
-//     doc.setFontSize(14);
-//     doc.text("Exam Seating Arrangement", 14, 15);
-
-//     doc.setFontSize(10);
-//     doc.text(`Room : ${room}`, 14, 25);
-//     doc.text(`Invigilator : ${staff}`, 14, 31);
-//     doc.text(`Departments : ${depts.join(", ")}`, 14, 37);
-//     doc.text(`Capacity : ${capacity}`, 14, 43);
-//     doc.text(`Occupied : ${seating.length}`, 14, 49);
-//     doc.text(`Not Seated : ${overflow.length}`, 14, 55);
-
-//     let y = 61;
-//     Object.entries(overflowSummary).forEach(([dept, count]) => {
-//       doc.text(`${dept} : ${count}`, 18, y);
-//       y += 6;
-//     });
-
-//     autoTable(doc, {
-//       startY: y + 5,
-//       head: [["Reg No", "Name", "Department"]],
-//       body: seating.map(s => [
-//         s.register_no,
-//         s.student_name,
-//         s.dept
-//       ])
-//     });
-
-//     doc.save("seating-arrangement.pdf");
-//   };
-
-//   return (
-//     <>
-//       <Header />
-
-//       <Box sx={{ display: "flex" }}>
-//         <AdminSidebar />
-
-//         <Box sx={{ p: 3, flexGrow: 1 }}>
-//           <Typography variant="h6" mb={2}>
-//             Seating Arrangement
-//           </Typography>
-
-//           {/* ================= CONTROLS ================= */}
-//           <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
-
-//             <FormControl sx={{ minWidth: 220 }} size="small">
-//               <InputLabel>Select Department(s)</InputLabel>
-//               <Select
-//                 multiple
-//                 value={depts}
-//                 label="Select Department(s)"
-//                 onChange={(e) => setDepts(e.target.value)}
-//               >
-//                 {departments.map(d => (
-//                   <MenuItem key={d} value={d}>{d}</MenuItem>
-//                 ))}
-//               </Select>
-//             </FormControl>
-
-//             <FormControl sx={{ minWidth: 160 }} size="small">
-//               <InputLabel>Select Room</InputLabel>
-//               <Select
-//                 value={room}
-//                 label="Select Room"
-//                 onChange={(e) => setRoom(e.target.value)}
-//               >
-//                 {roomsData.map(r => (
-//                   <MenuItem key={r.room_no} value={r.room_no}>
-//                     {r.room_no}
-//                   </MenuItem>
-//                 ))}
-//               </Select>
-//             </FormControl>
-
-//             <FormControl sx={{ minWidth: 200 }} size="small">
-//               <InputLabel>Select Invigilator</InputLabel>
-//               <Select
-//                 value={staff}
-//                 label="Select Invigilator"
-//                 onChange={(e) => setStaff(e.target.value)}
-//               >
-//                 {staffData.map(s => (
-//                   <MenuItem key={s.id} value={s.name}>
-//                     {s.name}
-//                   </MenuItem>
-//                 ))}
-//               </Select>
-//             </FormControl>
-
-//             <Button variant="outlined" onClick={() => setOpenView(true)}>
-//               VISUALS 👁
-//             </Button>
-
-//             <Button variant="contained" onClick={generateSeating}>
-//               Generate
-//             </Button>
-
-//             {Object.keys(roomWise).length > 0 && (
-//   <FormControl sx={{ minWidth: 160 }} size="small">
-//     <InputLabel>View Room</InputLabel>
-//     <Select
-//       value={currentRoom}
-//       label="View Room"
-//       onChange={(e) => {
-//         setCurrentRoom(e.target.value);
-//         setSeating(roomWise[e.target.value]);
-//       }}
-//     >
-//       {Object.keys(roomWise).map(r => (
-//         <MenuItem key={r} value={r}>
-//           {r}
-//         </MenuItem>
-//       ))}
-//     </Select>
-//   </FormControl>
-// )}
-
-
-//             {seating.length > 0 && (
-//               <Button variant="outlined" color="success" onClick={exportPDF}>
-//                 Export PDF
-//               </Button>
-//             )}
-//           </Box>
-
-//           {/* ================= WARNING ================= */}
-//           {overflow.length > 0 && (
-//             <Box sx={{
-//               mb: 2,
-//               p: 2,
-//               border: "1px solid #f44336",
-//               bgcolor: "#ffebee",
-//               borderRadius: 1
-//             }}>
-//               <Typography fontWeight={600} color="error">
-//                 ⚠ Capacity Exceeded
-//               </Typography>
-
-//               {Object.entries(getDeptSummary(overflow)).map(
-//                 ([dept, count]) => (
-//                   <Typography key={dept} fontSize={13}>
-//                     • {dept} : {count} student(s)
-//                   </Typography>
-//                 )
-//               )}
-//             </Box>
-//           )}
-
-//           {/* ================= TABLE ================= */}
-//           {seating.length > 0 && (
-//             <Paper>
-//               <Table>
-//                 <TableHead>
-//                   <TableRow>
-//                     <TableCell>Reg No</TableCell>
-//                     <TableCell>Name</TableCell>
-//                     <TableCell>Department</TableCell>
-//                   </TableRow>
-//                 </TableHead>
-//                 <TableBody>
-//                   {seating.map(s => (
-//                     <TableRow key={s.id}>
-//                       <TableCell>{s.register_no}</TableCell>
-//                       <TableCell>{s.student_name}</TableCell>
-//                       <TableCell>{s.dept}</TableCell>
-//                     </TableRow>
-//                   ))}
-//                 </TableBody>
-//               </Table>
-//             </Paper>
-//           )}
-//         </Box>
-//       </Box>
-
-//       <ClassroomDialog
-//   open={openView}
-//   onClose={() => setOpenView(false)}
-//   seating={seating}
-//   capacity={
-//     roomsData.find(r => r.room_no === currentRoom)?.capacity || 20
-//   }
-//   room={currentRoom}
-//   staff={staff}
-
-  
-// />
-
-// <Snackbar
-//   open={notify}
-//   autoHideDuration={6000}
-//   onClose={() => setNotify(false)}
-// >
-//   <Alert
-//     onClose={() => setNotify(false)}
-//     severity="warning"
-//     sx={{ width: "100%" }}
-//   >
-//     ⚠️ {overflow.length} students not allocated.
-//     Please assign another room (ex: B1).
-//   </Alert>
-// </Snackbar>
-
-//     </>
-//   );
-// }
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import {
   Box, Typography, Button,
   Table, TableHead, TableRow,
   TableCell, TableBody, Paper,
   FormControl, InputLabel, Select, MenuItem,
-  Snackbar, Alert
+  Dialog, DialogTitle, DialogContent,
+  Snackbar, Alert, Chip, IconButton
 } from "@mui/material";
+import HistoryIcon from '@mui/icons-material/History';
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-import studentsData from "../data/students";
-import roomsData from "../data/rooms";
-import staffData from "../data/staff";
-
 import Header from "../components/header";
 import AdminSidebar from "../components/sidebar";
-import ClassroomDialog from "../components/ClassroomDialog";
-
-/* ================= AUTO ROOM ALLOCATION ================= */
-function allocateStudentsToRooms(students, rooms) {
-  const result = {};
-  let remaining = [...students];
-
-  rooms.forEach(room => {
-    result[room.room_no] = [];
-    for (let i = 0; i < room.capacity; i++) {
-      if (remaining.length === 0) break;
-      result[room.room_no].push(remaining.shift());
-    }
-  });
-
-  return {
-    roomWiseSeating: result,
-    unallocatedStudents: remaining
-  };
-}
-
-/* ================= DEPT SUMMARY ================= */
-const getDeptSummary = (students) => {
-  const map = {};
-  students.forEach(s => {
-    map[s.dept] = (map[s.dept] || 0) + 1;
-  });
-  return map;
-};
 
 export default function AdminSeating() {
 
-  const [depts, setDepts] = useState([]);
-  const [room, setRoom] = useState("");
-  const [staff, setStaff] = useState("");
+  const [departments, setDepartments] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [staffList, setStaffList] = useState([]);
+  const [rooms, setRooms] = useState([]);
+
+  const [selectedDepts, setSelectedDepts] = useState([]);
+  const [selectedClasses, setSelectedClasses] = useState([]);
+  const [selectedStaff, setSelectedStaff] = useState("");
+  const [selectedRooms, setSelectedRooms] = useState([]);
+
   const [seating, setSeating] = useState([]);
   const [overflow, setOverflow] = useState([]);
-  const [roomWise, setRoomWise] = useState({});
-  const [currentRoom, setCurrentRoom] = useState("");
-  const [openView, setOpenView] = useState(false);
+  const [seatingHistory, setSeatingHistory] = useState([]);
+
+  const [openVisual, setOpenVisual] = useState(false);
   const [notify, setNotify] = useState(false);
+  const [showOverflow, setShowOverflow] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [selectedHistoryEntry, setSelectedHistoryEntry] = useState(null);
 
-  const departments = [...new Set(studentsData.map(s => s.dept))];
+  /* ================= FETCH DB DATA ================= */
+  useEffect(() => {
+    axios.get("http://127.0.0.1:5000/api/students")
+      .then(res => setStudents(res.data.students || []));
 
-  /* ================= GENERATE ================= */
+    axios.get("http://127.0.0.1:5000/api/students/departments")
+      .then(res => setDepartments(res.data.departments || []));
+
+    axios.get("http://127.0.0.1:5000/api/staff")
+      .then(res => setStaffList(res.data.staff || []));
+
+    axios.get("http://127.0.0.1:5000/api/rooms")
+      .then(res => setRooms(res.data.rooms || []));
+  }, []);
+
+  /* ================= GET CLASSES FOR SELECTED DEPT ================= */
+  const getClassesForSelectedDepts = () => {
+    if (selectedDepts.length === 0) return [];
+    
+    const classMap = {
+      1: "I MA",
+      2: "II MA",
+      3: "III MA",
+      4: "IV MA",
+      5: "V MA",
+      6: "VI MA"
+    };
+
+    // If only M.Sc department selected, show only I MA, II MA
+    if (selectedDepts.length === 1 && selectedDepts[0].toLowerCase().includes("m.sc")) {
+      const deptStudents = students.filter(s => s.department_name === selectedDepts[0]);
+      const semesters = [...new Set(deptStudents.map(s => s.semester))].sort();
+      return semesters.slice(0, 2).map(sem => ({
+        value: sem,
+        label: classMap[sem] || `Sem ${sem}`
+      }));
+    }
+    
+    // Otherwise show all available semesters
+    const allSemesters = new Set();
+    selectedDepts.forEach(dept => {
+      const deptStudents = students.filter(s => s.department_name === dept);
+      deptStudents.forEach(s => allSemesters.add(s.semester));
+    });
+    
+    return [...allSemesters].sort().map(sem => ({
+      value: sem,
+      label: classMap[sem] || `Sem ${sem}`
+    }));
+  };
+
+  /* ================= GET STUDENT RANGE ================= */
+  const getStudentRange = (dept, cls) => {
+    const filtered = students
+      .filter(s => s.department_name === dept && s.semester === cls)
+      .sort((a, b) => a.register_no.localeCompare(b.register_no));
+    
+    if (filtered.length === 0) return null;
+    
+    return {
+      start: filtered[0].register_no,
+      end: filtered[filtered.length - 1].register_no,
+      count: filtered.length
+    };
+  };
+
+  /* ================= CALCULATE TOTAL CAPACITY ================= */
+  const getTotalCapacity = () => {
+    return selectedRooms.reduce((total, roomNo) => {
+      const room = rooms.find(r => r.room_no === roomNo);
+      return total + (room?.capacity || 0);
+    }, 0);
+  };
+
+  /* ================= ALLOCATE STUDENTS - SEPARATE DEPARTMENTS ================= */
+  const allocateStudentsByDepartment = () => {
+    const totalCapacity = getTotalCapacity();
+    const remaining = [];
+    
+    let filteredStudents = students.filter(s =>
+      selectedDepts.includes(s.department_name) && 
+      selectedClasses.includes(s.semester)
+    );
+
+    // Group by department
+    const deptGroups = {};
+    selectedDepts.forEach(dept => {
+      deptGroups[dept] = filteredStudents
+        .filter(s => s.department_name === dept)
+        .sort((a, b) => a.register_no.localeCompare(b.register_no));
+    });
+
+    // Allocate students with separation between departments
+    // Seat pattern: Dept1 students, skip some seats, Dept2 students, skip some seats, etc.
+    const seatMatrix = Array.from({ length: totalCapacity }, () => null);
+    
+    // Calculate skip pattern - distribute departments evenly
+    const numDepts = selectedDepts.length;
+    const seatsPerDept = {};
+    
+    // First pass: count students per department
+    selectedDepts.forEach(dept => {
+      seatsPerDept[dept] = (deptGroups[dept] || []).length;
+    });
+
+    // Allocate in pattern: interleave departments
+    // Pattern: [Dept1_1, Dept2_1, Dept3_1, ..., Dept1_2, Dept2_2, Dept3_2, ...]
+    // If 3 departments: seat 1=Dept1, seat 2=Dept2, seat 3=Dept3, seat 4=Dept1, seat 5=Dept2, seat 6=Dept3...
+    
+    let currentSeatIndex = 0;
+    const maxStudentsInAnyDept = Math.max(...Object.values(seatsPerDept));
+    
+    // Fill seats in round-robin fashion to separate departments
+    for (let round = 0; round < maxStudentsInAnyDept; round++) {
+      for (let d = 0; d < numDepts; d++) {
+        const dept = selectedDepts[d];
+        const deptStudents = deptGroups[dept] || [];
+        
+        if (round < deptStudents.length) {
+          if (currentSeatIndex < totalCapacity) {
+            seatMatrix[currentSeatIndex] = {
+              ...deptStudents[round],
+              seatNumber: currentSeatIndex + 1
+            };
+            currentSeatIndex++;
+          } else {
+            remaining.push(deptStudents[round]);
+          }
+        }
+      }
+    }
+
+    return {
+      seated: seatMatrix.filter(s => s !== null),
+      remaining
+    };
+  };
+
+  /* ================= GENERATE SEATING ================= */
   const generateSeating = () => {
-    if (depts.length === 0 || !staff) {
-      alert("Select Department(s) & Invigilator");
+    if (selectedDepts.length === 0 || selectedClasses.length === 0 || 
+        selectedStaff === "" || selectedRooms.length === 0) {
+      alert("Select Department, Class, Invigilator & Room(s)");
       return;
     }
 
-    const filtered = studentsData.filter(s =>
-      depts.includes(s.dept)
-    );
+    const { seated, remaining } = allocateStudentsByDepartment();
+    
+    // Get class labels
+    const classLabels = selectedClasses.map(c => 
+      getClassesForSelectedDepts().find(gc => gc.value === c)?.label || c
+    ).join(', ');
 
-    const { roomWiseSeating, unallocatedStudents } =
-      allocateStudentsToRooms(filtered, roomsData);
+    // Save to history
+    const historyEntry = {
+      id: Date.now(),
+      departments: selectedDepts,
+      classes: selectedClasses,
+      classLabels: classLabels,
+      rooms: selectedRooms,
+      invigilator: selectedStaff,
+      seated: seated,
+      remaining: remaining,
+      timestamp: new Date().toLocaleString()
+    };
+    
+    setSeatingHistory(prev => [historyEntry, ...prev]);
+    setSeating(seated);
+    setOverflow(remaining);
 
-    setRoomWise(roomWiseSeating);
-
-    const firstRoom = Object.keys(roomWiseSeating)[0];
-    setCurrentRoom(firstRoom);
-    setSeating(roomWiseSeating[firstRoom] || []);
-
-    setOverflow(unallocatedStudents);
-
-    if (unallocatedStudents.length > 0) {
-      setNotify(true); // 🔔 snackbar trigger
+    if (remaining.length > 0) {
+      setNotify(true);
     }
+  };
+
+  /* ================= GET ROOM STUDENTS ================= */
+  const getRoomStudents = (roomNo, seatingData, roomsList) => {
+    const room = roomsList.find(r => r.room_no === roomNo);
+    const roomCapacity = room?.capacity || 0;
+    
+    let startIndex = 0;
+    const roomOrder = roomsList.map(r => r.room_no);
+    const roomIndex = roomOrder.indexOf(roomNo);
+    
+    for (let i = 0; i < roomIndex; i++) {
+      const prevRoom = roomsList.find(r => r.room_no === roomOrder[i]);
+      startIndex += (prevRoom?.capacity || 0);
+    }
+    
+    return seatingData.slice(startIndex, startIndex + roomCapacity);
+  };
+
+  /* ================= GET ROOM INFO ================= */
+  const getRoomInfo = (roomNo) => {
+    const room = rooms.find(r => r.room_no === roomNo);
+    const roomStudents = getRoomStudents(roomNo, seating, rooms);
+    
+    return {
+      room: room,
+      students: roomStudents,
+      occupied: roomStudents.length,
+      available: (room?.capacity || 0) - roomStudents.length
+    };
+  };
+
+  /* ================= GET ROOM INFO FOR HISTORY ================= */
+  const getRoomInfoForHistory = (roomNo, historyRooms, historySeated) => {
+    const room = rooms.find(r => r.room_no === roomNo);
+    const roomStudents = getRoomStudents(roomNo, historySeated, rooms);
+    
+    return {
+      room: room,
+      students: roomStudents,
+      occupied: roomStudents.length,
+      available: (room?.capacity || 0) - roomStudents.length
+    };
   };
 
   /* ================= EXPORT PDF ================= */
   const exportPDF = () => {
     const doc = new jsPDF();
-    const overflowSummary = getDeptSummary(overflow);
 
-    doc.setFontSize(14);
     doc.text("Exam Seating Arrangement", 14, 15);
-
     doc.setFontSize(10);
-    doc.text(`Room : ${currentRoom}`, 14, 25);
-    doc.text(`Invigilator : ${staff}`, 14, 31);
-    doc.text(`Departments : ${depts.join(", ")}`, 14, 37);
-    doc.text(`Seated : ${seating.length}`, 14, 43);
-    doc.text(`Not Seated : ${overflow.length}`, 14, 49);
 
-    let y = 55;
-    Object.entries(overflowSummary).forEach(([dept, count]) => {
-      doc.text(`${dept} : ${count}`, 18, y);
-      y += 6;
-    });
+    doc.text(`Rooms : ${selectedRooms.join(", ")}`, 14, 25);
+    doc.text(`Invigilator : ${selectedStaff}`, 14, 31);
+    doc.text(`Departments : ${selectedDepts.join(", ")}`, 14, 37);
+    doc.text(`Classes : ${selectedClasses.join(", ")}`, 14, 43);
+    doc.text(`Seated : ${seating.length}`, 14, 49);
+    doc.text(`Remaining : ${overflow.length}`, 14, 55);
 
     autoTable(doc, {
-      startY: y + 5,
-      head: [["Reg No", "Name", "Department"]],
+      startY: 60,
+      head: [["S.No", "Reg No", "Name", "Department", "Semester", "Seat No"]],
       body: seating.map(s => [
+        s.seatNumber,
         s.register_no,
         s.student_name,
-        s.dept
+        s.department_name,
+        s.semester,
+        s.seatNumber
       ])
     });
 
     doc.save("seating-arrangement.pdf");
   };
 
+  /* ================= HANDLE DEPARTMENT CHANGE ================= */
+  const handleDeptChange = (deptValues) => {
+    setSelectedDepts(deptValues);
+    setSelectedClasses([]);
+    setSeating([]);
+    setOverflow([]);
+    setShowOverflow(false);
+  };
+
+  /* ================= HANDLE CLASS CHANGE ================= */
+  const handleClassChange = (classValues) => {
+    setSelectedClasses(classValues);
+    setSeating([]);
+    setOverflow([]);
+    setShowOverflow(false);
+  };
+
+  /* ================= LOAD FROM HISTORY ================= */
+  const loadFromHistory = (historyEntry) => {
+    setSelectedDepts(historyEntry.departments);
+    setSelectedClasses(historyEntry.classes);
+    setSelectedRooms(historyEntry.rooms);
+    setSelectedStaff(historyEntry.invigilator);
+    setSeating(historyEntry.seated);
+    setOverflow(historyEntry.remaining);
+    setShowHistory(false);
+  };
+
+  /* ================= VIEW HISTORY VISUALS ================= */
+  const viewHistoryVisual = (historyEntry) => {
+    setSelectedHistoryEntry(historyEntry);
+    setOpenVisual(true);
+  };
+
   return (
     <>
       <Header />
-
       <Box sx={{ display: "flex" }}>
         <AdminSidebar />
 
         <Box sx={{ p: 3, flexGrow: 1 }}>
-          <Typography variant="h6" mb={2}>
-            Seating Arrangement
-          </Typography>
+          {/* ================= HEADER WITH HISTORY BUTTON ================= */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+            <Typography variant="h6">
+              Seating Arrangement
+            </Typography>
+            
+            {seatingHistory.length > 0 && (
+              <Button
+                variant="outlined"
+                startIcon={<HistoryIcon />}
+                onClick={() => setShowHistory(true)}
+                size="small"
+              >
+                History ({seatingHistory.length})
+              </Button>
+            )}
+          </Box>
 
-          {/* ================= CONTROLS ================= */}
-          <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
-
-            <FormControl sx={{ minWidth: 220 }} size="small">
-              <InputLabel>Select Department(s)</InputLabel>
+          {/* ================= DEPARTMENT SELECT ================= */}
+          <Box sx={{ mb: 3 }}>
+            <FormControl size="small" sx={{ minWidth: 280, mr: 2 }}>
+              <InputLabel>Department</InputLabel>
               <Select
                 multiple
-                value={depts}
-                label="Select Department(s)"
-                onChange={(e) => setDepts(e.target.value)}
+                value={selectedDepts}
+onChange={(e) => handleDeptChange(e.target.value)}
+                renderValue={(selected) => (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip key={value} label={value} size="small" />
+                    ))}
+                  </Box>
+                )}
               >
                 {departments.map(d => (
                   <MenuItem key={d} value={d}>{d}</MenuItem>
                 ))}
               </Select>
             </FormControl>
+          </Box>
 
-            <FormControl sx={{ minWidth: 200 }} size="small">
-              <InputLabel>Select Invigilator</InputLabel>
-              <Select
-                value={staff}
-                label="Select Invigilator"
-                onChange={(e) => setStaff(e.target.value)}
-              >
-                {staffData.map(s => (
-                  <MenuItem key={s.id} value={s.name}>
-                    {s.name}
-                  </MenuItem>
+          {/* ================= CLASS BUTTONS ================= */}
+          {selectedDepts.length > 0 && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" mb={1} fontWeight="bold">
+                Select Class:
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                {getClassesForSelectedDepts().map(cls => (
+                  <Button
+                    key={cls.value}
+                    variant={selectedClasses.includes(cls.value) ? "contained" : "outlined"}
+                    onClick={() => {
+                      const newClasses = selectedClasses.includes(cls.value)
+                        ? selectedClasses.filter(c => c !== cls.value)
+                        : [...selectedClasses, cls.value];
+                      handleClassChange(newClasses);
+                    }}
+                    sx={{ minWidth: 100 }}
+                  >
+                    {cls.label}
+                  </Button>
                 ))}
-              </Select>
-            </FormControl>
+              </Box>
+              
+              {/* Show student range */}
+              {selectedClasses.length > 0 && selectedDepts.map(dept => {
+                const deptClasses = selectedClasses.filter(c => {
+                  const deptStudents = students.filter(s => s.department_name === dept);
+                  return deptStudents.some(s => s.semester === c);
+                });
+                
+                return deptClasses.map(cls => {
+                  const range = getStudentRange(dept, cls);
+                  if (!range) return null;
+                  
+                  const clsLabel = getClassesForSelectedDepts().find(c => c.value === cls)?.label;
+                  
+                  return (
+                    <Typography key={`${dept}-${cls}-range`} variant="body2" sx={{ mt: 1, color: "#666" }}>
+                      <Chip label={clsLabel} size="small" sx={{ mr: 1 }} />
+                      {range.start} - {range.end} ({range.count} students)
+                    </Typography>
+                  );
+                });
+              })}
+            </Box>
+          )}
 
-            <Button variant="contained" onClick={generateSeating}>
-              Generate
-            </Button>
-
-            <Button variant="outlined" onClick={() => setOpenView(true)}>
-              VISUALS 👁
-            </Button>
-
-            {Object.keys(roomWise).length > 0 && (
-              <FormControl sx={{ minWidth: 160 }} size="small">
-                <InputLabel>View Room</InputLabel>
+          {/* ================= INVIGILATOR & ROOM SELECT ================= */}
+          {selectedClasses.length > 0 && (
+            <Box sx={{ mb: 3, display: "flex", gap: 2, flexWrap: "wrap" }}>
+              <FormControl size="small" sx={{ minWidth: 200 }}>
+                <InputLabel>Invigilator</InputLabel>
                 <Select
-                  value={currentRoom}
-                  label="View Room"
-                  onChange={(e) => {
-                    setCurrentRoom(e.target.value);
-                    setSeating(roomWise[e.target.value]);
-                  }}
+                  value={selectedStaff}
+                  onChange={(e) => setSelectedStaff(e.target.value)}
                 >
-                  {Object.keys(roomWise).map(r => (
-                    <MenuItem key={r} value={r}>{r}</MenuItem>
+                  {staffList.map(s => (
+                    <MenuItem key={s.id} value={s.staff_name}>
+                      {s.staff_name}
+                    </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-            )}
 
-            {seating.length > 0 && (
-              <Button variant="outlined" color="success" onClick={exportPDF}>
-                Export PDF
+              <FormControl size="small" sx={{ minWidth: 250 }}>
+                <InputLabel>Hall(s)</InputLabel>
+                <Select
+                  multiple
+                  value={selectedRooms}
+                  onChange={(e) => {
+                    setSelectedRooms(e.target.value);
+                    setSeating([]);
+                    setOverflow([]);
+                    setShowOverflow(false);
+                  }}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                      {selected.map((value) => (
+                        <Chip key={value} label={value} size="small" />
+                      ))}
+                    </Box>
+                  )}
+                >
+                  {rooms.map(r => (
+                    <MenuItem key={r.id} value={r.room_no}>
+                      {r.room_no} (Capacity: {r.capacity})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <Button variant="contained" onClick={generateSeating} sx={{ minWidth: 120 }}>
+                Generate
               </Button>
-            )}
-          </Box>
+            </Box>
+          )}
 
-          {/* ================= WARNING BOX ================= */}
-          {overflow.length > 0 && (
-            <Box sx={{
-              mb: 2,
-              p: 2,
-              border: "1px solid #f44336",
-              bgcolor: "#ffebee",
-              borderRadius: 1
-            }}>
-              <Typography fontWeight={600} color="error">
-                ⚠ Capacity Exceeded
+          {/* ================= ROOM CAPACITY INFO ================= */}
+          {selectedRooms.length > 0 && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" sx={{ color: "#1976d2", mb: 1 }}>
+                Total Capacity: {getTotalCapacity()} seats
+                {selectedClasses.length > 0 && (
+                  <> | Selected Students: {
+                    students.filter(s => 
+                      selectedDepts.includes(s.department_name) && 
+                      selectedClasses.includes(s.semester)
+                    ).length
+                  }</>
+                )}
               </Typography>
+              
+              {/* Room buttons for visual */}
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                {selectedRooms.map(roomNo => (
+                  <Button
+                    key={roomNo}
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setOpenVisual(true)}
+                  >
+                    {roomNo}
+                  </Button>
+                ))}
+              </Box>
+            </Box>
+          )}
 
-              {Object.entries(getDeptSummary(overflow)).map(
-                ([dept, count]) => (
-                  <Typography key={dept} fontSize={13}>
-                    • {dept} : {count} student(s)
-                  </Typography>
-                )
+          {/* ================= COUNT & NEXT BUTTON ================= */}
+          {seating.length > 0 && (
+            <Box sx={{ mb: 2, display: "flex", gap: 2, alignItems: "center" }}>
+              <Typography fontWeight="600">
+                Seated : {seating.length} | Remaining : {overflow.length}
+              </Typography>
+              
+              {overflow.length > 0 && (
+                <Button 
+                  variant="outlined" 
+                  color="warning"
+                  onClick={() => setShowOverflow(true)}
+                >
+                  Next ({overflow.length})
+                </Button>
               )}
             </Box>
           )}
 
-          {/* ================= TABLE ================= */}
+          {/* ================= SEATING TABLE ================= */}
           {seating.length > 0 && (
             <Paper>
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Reg No</TableCell>
+                    <TableCell>Seat No</TableCell>
+                    <TableCell>Register No</TableCell>
                     <TableCell>Name</TableCell>
                     <TableCell>Department</TableCell>
+                    <TableCell>Semester</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {seating.map(s => (
-                    <TableRow key={s.id}>
+                  {seating.map((s, i) => (
+                    <TableRow key={s.id || i}>
+                      <TableCell>{s.seatNumber}</TableCell>
                       <TableCell>{s.register_no}</TableCell>
                       <TableCell>{s.student_name}</TableCell>
-                      <TableCell>{s.dept}</TableCell>
+                      <TableCell>{s.department_name}</TableCell>
+                      <TableCell>{s.semester}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </Paper>
           )}
+
+          {/* ================= ACTION BUTTONS ================= */}
+          {seating.length > 0 && (
+            <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
+              <Button variant="outlined" onClick={() => setOpenVisual(true)}>
+                VISUALS 👁
+              </Button>
+              <Button variant="outlined" color="success" onClick={exportPDF}>
+                Export PDF
+              </Button>
+            </Box>
+          )}
         </Box>
       </Box>
 
-      {/* ================= CLASSROOM VISUAL ================= */}
-      <ClassroomDialog
-        open={openView}
-        onClose={() => setOpenView(false)}
-        seating={seating}
-        capacity={
-          roomsData.find(r => r.room_no === currentRoom)?.capacity || 20
-        }
-        room={currentRoom}
-        staff={staff}
-      />
+      {/* ================= VISUAL DIALOG ================= */}
+      <Dialog open={openVisual} onClose={() => { setOpenVisual(false); setSelectedHistoryEntry(null); }} maxWidth="lg" fullWidth>
+        <DialogTitle>
+          {selectedHistoryEntry 
+            ? `History: ${selectedHistoryEntry.classLabels} - ${selectedHistoryEntry.rooms.join(", ")}`
+            : `Seating Visual - ${selectedRooms.join(", ")}`
+          }
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            Invigilator: {selectedHistoryEntry ? selectedHistoryEntry.invigilator : selectedStaff}
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          {(selectedHistoryEntry ? selectedHistoryEntry.rooms : selectedRooms).map(roomNo => {
+            const { room, students: roomStudents, occupied, available } = selectedHistoryEntry
+              ? getRoomInfoForHistory(roomNo, selectedHistoryEntry.rooms, selectedHistoryEntry.seated)
+              : getRoomInfo(roomNo);
+            
+            const capacity = room?.capacity || 0;
+            const totalColumns = 8; // A, B, C, D, E, F, G, H
+            const seatsPerColumn = 5; // 5 rows per column
+            
+            // Function to get seat index - VERTICAL FILLING
+            // Column A: seats 1-5, Column B: seats 6-10, etc.
+            const getVerticalSeatIndex = (colIdx, rowIdx) => {
+              return colIdx * seatsPerColumn + rowIdx;
+            };
+            
+            return (
+              <Box key={roomNo} sx={{ mb: 4 }}>
+                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1, color: "#1976d2" }}>
+                  Hall {roomNo} - {capacity} seats
+                </Typography>
+                
+                {/* Column Headers */}
+                <Box sx={{ display: "flex", mb: 0.5 }}>
+                  <Box sx={{ width: 30 }} /> {/* Space for row numbers */}
+                  {Array.from({ length: totalColumns }).map((_, colIdx) => (
+                    <Box 
+                      key={colIdx} 
+                      sx={{ 
+                        width: 85, 
+                        textAlign: "center", 
+                        fontWeight: "bold", 
+                        color: "#666",
+                        borderBottom: "2px solid #333"
+                      }}
+                    >
+                      {String.fromCharCode(65 + colIdx)}
+                    </Box>
+                  ))}
+                </Box>
+                
+                {/* Seat Grid - VERTICAL FILLING */}
+                {/* Each row shows one seat from each column (going down) */}
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                  {Array.from({ length: seatsPerColumn }).map((_, rowIdx) => (
+                    <Box key={rowIdx} sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                      {/* Row Number */}
+                      <Typography sx={{ width: 25, fontWeight: "bold", textAlign: "center", color: "#666" }}>
+                        {rowIdx + 1}
+                      </Typography>
+                      
+                      {/* Seats in this row - filled vertically */}
+                      {Array.from({ length: totalColumns }).map((_, colIdx) => {
+                        const seatIdx = getVerticalSeatIndex(colIdx, rowIdx);
+                        const student = seatIdx < capacity ? roomStudents[seatIdx] : null;
+                        
+                        return (
+                          <Box
+                            key={colIdx}
+                            sx={{
+                              width: 80,
+                              height: 50,
+                              border: "2px solid #333",
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              bgcolor: student ? "#c8e6c9" : "#ffcdd2",
+                              fontSize: "10px",
+                              padding: "2px"
+                            }}
+                            title={student ? `${student.register_no} - ${student.student_name}` : `Seat ${seatIdx + 1}`}
+                          >
+                            {student ? (
+                              <>
+                                <Typography sx={{ fontSize: "9px", fontWeight: "bold", lineHeight: 1.2, textAlign: "center" }}>
+                                  {student.register_no}
+                                </Typography>
+                              </>
+                            ) : seatIdx < capacity ? (
+                              <Typography sx={{ fontSize: "10px", color: "#999" }}>
+                                {seatIdx + 1}
+                              </Typography>
+                            ) : null}
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  ))}
+                </Box>
+                <Typography variant="caption" sx={{ mt: 1, display: "block", ml: 3 }}>
+                  Occupied: {occupied} | Available: {available}
+                </Typography>
+              </Box>
+            );
+          })}
+          
+          <Box sx={{ mt: 2, display: "flex", gap: 3, ml: 3 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box sx={{ width: 20, height: 20, bgcolor: "#c8e6c9", border: "1px solid #333" }} />
+              <Typography variant="body2">
+                Occupied ({selectedHistoryEntry ? selectedHistoryEntry.seated.length : seating.length})
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box sx={{ width: 20, height: 20, bgcolor: "#ffcdd2", border: "1px solid #333" }} />
+              <Typography variant="body2">
+                Available ({getTotalCapacity() - (selectedHistoryEntry ? selectedHistoryEntry.seated.length : seating.length)})
+              </Typography>
+            </Box>
+          </Box>
+        </DialogContent>
+      </Dialog>
 
-      {/* ================= SNACKBAR ================= */}
-      <Snackbar
-        open={notify}
-        autoHideDuration={6000}
-        onClose={() => setNotify(false)}
-      >
-        <Alert
-          onClose={() => setNotify(false)}
-          severity="warning"
-          sx={{ width: "100%" }}
-        >
-          ⚠️ {overflow.length} students not allocated.
-          Please assign another room (ex: B1).
+      {/* ================= HISTORY DIALOG ================= */}
+      <Dialog open={showHistory} onClose={() => setShowHistory(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          Seating History
+        </DialogTitle>
+        <DialogContent>
+          {seatingHistory.length === 0 ? (
+            <Typography>No seating history found.</Typography>
+          ) : (
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Date/Time</TableCell>
+                  <TableCell>Class</TableCell>
+                  <TableCell>Department</TableCell>
+                  <TableCell>Rooms</TableCell>
+                  <TableCell>Seated</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {seatingHistory.map((entry) => (
+                  <TableRow key={entry.id}>
+                    <TableCell>{entry.timestamp}</TableCell>
+                    <TableCell>{entry.classLabels}</TableCell>
+                    <TableCell>{entry.departments.join(", ")}</TableCell>
+                    <TableCell>{entry.rooms.join(", ")}</TableCell>
+                    <TableCell>{entry.seated.length}</TableCell>
+                    <TableCell>
+                      <Button 
+                        size="small" 
+                        onClick={() => viewHistoryVisual(entry)}
+                      >
+                        View
+                      </Button>
+                      <Button 
+                        size="small" 
+                        onClick={() => loadFromHistory(entry)}
+                      >
+                        Load
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ================= OVERFLOW DIALOG ================= */}
+      <Dialog open={showOverflow} onClose={() => setShowOverflow(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          Remaining Students
+        </DialogTitle>
+        <DialogContent>
+          {overflow.length === 0 ? (
+            <Typography>All students are seated!</Typography>
+          ) : (
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Register No</TableCell>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Department</TableCell>
+                  <TableCell>Semester</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {overflow.map((s, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{s.register_no}</TableCell>
+                    <TableCell>{s.student_name}</TableCell>
+                    <TableCell>{s.department_name}</TableCell>
+                    <TableCell>{s.semester}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ================= WARNING ================= */}
+      <Snackbar open={notify} autoHideDuration={5000} onClose={() => setNotify(false)}>
+        <Alert severity="warning">
+          ⚠ {overflow.length} students not allocated – click "Next" to view remaining students
         </Alert>
       </Snackbar>
     </>
   );
 }
+
+

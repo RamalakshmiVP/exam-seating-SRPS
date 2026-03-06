@@ -7,6 +7,7 @@ import AdminStaff from "./pages/AdminStaff";
 import AdminStudents from "./pages/AdminStudents";
 import AdminSeating from "./pages/AdminSeating";
 import AdminRooms from "./pages/AdminRooms";
+import AdminTimetable from "./pages/AdminTimetable";
 function App() {
   return (
     <BrowserRouter>
@@ -28,6 +29,7 @@ function App() {
         <Route path="/admin/students" element={<AdminStudents />} />
         <Route path="/admin/seating" element={<AdminSeating />} />
         <Route path="/admin/rooms" element={<AdminRooms />} />
+        <Route path="/admin/timetable" element={<AdminTimetable />} />
 
       </Routes>
     </BrowserRouter>
