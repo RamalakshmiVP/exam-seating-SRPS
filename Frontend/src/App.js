@@ -8,6 +8,11 @@ import AdminStudents from "./pages/AdminStudents";
 import AdminSeating from "./pages/AdminSeating";
 import AdminRooms from "./pages/AdminRooms";
 import AdminTimetable from "./pages/AdminTimetable";
+import StaffLogin from "./pages/StaffLogin";
+import StaffDashboard from "./pages/StaffDashboard";
+import StudentLogin from "./pages/StudentLogin";
+import StudentDashboard from "./pages/StudentDashboard";
+
 function App() {
   return (
     <BrowserRouter>
@@ -18,7 +23,14 @@ function App() {
 
         {/* ADMIN AUTH */}
         <Route path="/admin-login" element={<AdminLogin />} />
-        {/* <Route path="/staff-login" element={<StaffLogin />} /> */}
+
+        {/* STAFF AUTH */}
+        <Route path="/staff-login" element={<StaffLogin />} />
+        <Route path="/staff-dashboard" element={<StaffDashboard />} />
+
+        {/* STUDENT AUTH */}
+        <Route path="/student-login" element={<StudentLogin />} />
+        <Route path="/student-dashboard" element={<StudentDashboard />} />
 
         {/* ADMIN DASHBOARD */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />

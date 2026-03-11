@@ -32,6 +32,7 @@ export default function AdminSeating() {
   const [seating, setSeating] = useState([]);
   const [overflow, setOverflow] = useState([]);
   const [seatingHistory, setSeatingHistory] = useState([]);
+  const [selectedNewHall, setSelectedNewHall] = useState("");
 
   const [openVisual, setOpenVisual] = useState(false);
   const [notify, setNotify] = useState(false);
@@ -59,12 +60,12 @@ export default function AdminSeating() {
     if (selectedDepts.length === 0) return [];
     
     const classMap = {
-      1: "I MA",
-      2: "II MA",
-      3: "III MA",
-      4: "IV MA",
-      5: "V MA",
-      6: "VI MA"
+      1: "I sem",
+      2: "II sem",
+      3: "III sem",
+      4: "IV sem",
+      5: "V sem",
+      6: "VI sem"
     };
 
     // If only M.Sc department selected, show only I MA, II MA
@@ -244,6 +245,26 @@ export default function AdminSeating() {
     };
   };
 
+  /* ================= GET DEPARTMENTS IN SEATING ================= */
+  const getDepartmentsInSeating = () => {
+    const deptCounts = {};
+    seating.forEach(s => {
+      const dept = s.department_name || "Unknown";
+      deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+    });
+    return Object.entries(deptCounts).map(([dept, count]) => ({ dept, count }));
+  };
+
+  /* ================= GET CLASSES IN SEATING ================= */
+  const getClassesInSeating = () => {
+    const classCounts = {};
+    seating.forEach(s => {
+      const cls = s.semester ? `Sem ${s.semester}` : "Unknown";
+      classCounts[cls] = (classCounts[cls] || 0) + 1;
+    });
+    return Object.entries(classCounts).map(([cls, count]) => ({ cls, count }));
+  };
+
   /* ================= GET ROOM INFO FOR HISTORY ================= */
   const getRoomInfoForHistory = (roomNo, historyRooms, historySeated) => {
     const room = rooms.find(r => r.room_no === roomNo);
@@ -321,6 +342,54 @@ export default function AdminSeating() {
     setOpenVisual(true);
   };
 
+  /* ================= PLACE STUDENTS IN NEW HALL ================= */
+  const placeStudentsInNewHall = () => {
+    if (!selectedNewHall || overflow.length === 0) {
+      alert("Please select a hall first!");
+      return;
+    }
+
+    // Get the capacity of the selected new hall
+    const newRoom = rooms.find(r => r.room_no === selectedNewHall);
+    if (!newRoom) {
+      alert("Selected hall not found!");
+      return;
+    }
+
+    const newHallCapacity = newRoom.capacity;
+    const studentsToPlace = overflow.slice(0, newHallCapacity);
+    const stillRemaining = overflow.slice(newHallCapacity);
+
+    // Calculate the starting seat number for the new hall
+    const currentTotalSeats = seating.length;
+    
+    // Add new students to seating with proper seat numbers
+    const newlySeated = studentsToPlace.map((student, index) => ({
+      ...student,
+      seatNumber: currentTotalSeats + index + 1
+    }));
+
+    // Update states
+    setSeating([...seating, ...newlySeated]);
+    setOverflow(stillRemaining);
+    setSelectedRooms([...selectedRooms, selectedNewHall]);
+    setSelectedNewHall("");
+    
+    // Show success message
+    if (stillRemaining.length === 0) {
+      alert(`All remaining students have been seated in ${selectedNewHall}!`);
+      setShowOverflow(false);
+    } else {
+      alert(`${studentsToPlace.length} students placed in ${selectedNewHall}. ${stillRemaining.length} students still remaining.`);
+    }
+  };
+
+  /* ================= GET AVAILABLE ROOMS FOR NEW HALL ================= */
+  const getAvailableRooms = () => {
+    // Filter out rooms that are already selected
+    return rooms.filter(r => !selectedRooms.includes(r.room_no));
+  };
+
   return (
     <>
       <Header />
@@ -390,7 +459,7 @@ onChange={(e) => handleDeptChange(e.target.value)}
                   >
                     {cls.label}
                   </Button>
-                ))}
+                ))} 
               </Box>
               
               {/* Show student range */}
@@ -681,6 +750,33 @@ onChange={(e) => handleDeptChange(e.target.value)}
               </Typography>
             </Box>
           </Box>
+
+          {/* ================= CLASS/DEPARTMENT SUMMARY ================= */}
+          {!selectedHistoryEntry && seating.length > 0 && (
+            <Box sx={{ mt: 3, p: 2, bgcolor: "#f5f5f5", borderRadius: 1 }}>
+              <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
+                Summary:
+              </Typography>
+              <Box sx={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                <Box>
+                  <Typography variant="subtitle2" fontWeight="bold">Classes:</Typography>
+                  {getClassesInSeating().map((item, idx) => (
+                    <Typography key={idx} variant="body2">
+                      {item.cls}: {item.count} students
+                    </Typography>
+                  ))}
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" fontWeight="bold">Departments:</Typography>
+                  {getDepartmentsInSeating().map((item, idx) => (
+                    <Typography key={idx} variant="body2">
+                      {item.dept}: {item.count} students
+                    </Typography>
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -737,32 +833,65 @@ onChange={(e) => handleDeptChange(e.target.value)}
       {/* ================= OVERFLOW DIALOG ================= */}
       <Dialog open={showOverflow} onClose={() => setShowOverflow(false)} maxWidth="md" fullWidth>
         <DialogTitle>
-          Remaining Students
+          Remaining Students ({overflow.length})
         </DialogTitle>
         <DialogContent>
           {overflow.length === 0 ? (
             <Typography>All students are seated!</Typography>
           ) : (
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Register No</TableCell>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Department</TableCell>
-                  <TableCell>Semester</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {overflow.map((s, i) => (
-                  <TableRow key={i}>
-                    <TableCell>{s.register_no}</TableCell>
-                    <TableCell>{s.student_name}</TableCell>
-                    <TableCell>{s.department_name}</TableCell>
-                    <TableCell>{s.semester}</TableCell>
+            <>
+              {/* Hall Selection and Place Button */}
+              <Box sx={{ mb: 3, display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+                <FormControl size="small" sx={{ minWidth: 200 }}>
+                  <InputLabel>Select Hall</InputLabel>
+                  <Select
+                    value={selectedNewHall}
+                    onChange={(e) => setSelectedNewHall(e.target.value)}
+                    label="Select Hall"
+                  >
+                    {getAvailableRooms().map(r => (
+                      <MenuItem key={r.id} value={r.room_no}>
+                        {r.room_no} (Capacity: {r.capacity})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
+                <Button 
+                  variant="contained" 
+                  color="primary"
+                  onClick={placeStudentsInNewHall}
+                  disabled={!selectedNewHall}
+                >
+                  Place Students
+                </Button>
+              </Box>
+
+              {/* Remaining Students Table */}
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Remaining Students List:
+              </Typography>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Register No</TableCell>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Department</TableCell>
+                    <TableCell>Semester</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {overflow.map((s, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{s.register_no}</TableCell>
+                      <TableCell>{s.student_name}</TableCell>
+                      <TableCell>{s.department_name}</TableCell>
+                      <TableCell>{s.semester}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </>
           )}
         </DialogContent>
       </Dialog>

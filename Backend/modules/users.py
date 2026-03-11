@@ -37,7 +37,7 @@ def staff_login():
 
     for staff in staff_list:
         if (
-            staff["phone"] == data.get("phone")
+            staff["username"] == data.get("username")
             and staff["password"] == data.get("password")
         ):
             return jsonify({
@@ -56,7 +56,7 @@ def change_staff_password():
 
     for staff in staff_list:
         if (
-            staff["phone"] == data.get("phone")
+            staff["username"] == data.get("username")
             and staff["password"] == data.get("old_password")
         ):
             staff["password"] = data.get("new_password")
@@ -69,19 +69,39 @@ def change_staff_password():
 
 
 # ================= STUDENT LOGIN =================
-# @users.route("/login/student", methods=["POST"])
-# def student_login():
-#     data = request.json
+@users.route("/login/student", methods=["POST"])
+def student_login():
+    from database import get_connection
+    data = request.json
+    
+    reg_no = data.get("reg_no")
+    dob = data.get("dob")
 
-#     for s in students:
-#         if (
-#             s["register_no"] == data.get("reg_no")
-#             and s["dob"] == data.get("dob")
-#         ):
-#             return jsonify({
-#                 "status": "success",
-#                 "role": "student",
-#                 "name": s["student_name"]
-#             })
+    conn = get_connection()
+    cur = conn.cursor()
 
-#     return jsonify({"status": "fail", "message": "Invalid credentials"}), 401
+    cur.execute("""
+        SELECT 
+            "Student_Name",
+            "Department_Name",
+            "Semester",
+            "Gender"
+        FROM student
+        WHERE "Register_No" = %s AND "DOB" = %s
+    """, (reg_no, dob))
+
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if row:
+        return jsonify({
+            "status": "success",
+            "role": "student",
+            "name": row[0],
+            "dept": row[1],
+            "sem": row[2],
+            "gender": row[3]
+        })
+
+    return jsonify({"status": "fail", "message": "Invalid credentials"}), 401
